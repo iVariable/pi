@@ -17,3 +17,4 @@ Manuals used:
 
 1) Location switch
 2) Display with data
+3) https://projects.raspberrypi.org/en/projects/fart-detector

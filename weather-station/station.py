@@ -95,12 +95,17 @@ def get_last_humidity(location):
 # ACTIONS
 
 
-def report():
+def report(type):
     temperature, _, temp_time = get_last_temp(get_location())
     humidity, _, humidity_time = get_last_humidity(get_location())
-    LOGGER.info('Temp at {temp_time}: {temp:0.1f} C  Humidity at {humidity_time}: {humidity:0.1f} %'.format(
-        temp=temperature, humidity=humidity, temp_time=temp_time, humidity_time=humidity_time
-    ))
+    if type == "temp":
+        print(temperature)
+    elif type == "humidity":
+        print(humidity)
+    else:
+        LOGGER.info('Temp at {temp_time}: {temp:0.1f} C  Humidity at {humidity_time}: {humidity:0.1f} %'.format(
+            temp=temperature, humidity=humidity, temp_time=temp_time, humidity_time=humidity_time
+        ))
 
 
 def run():
@@ -121,8 +126,8 @@ if __name__ == "__main__":
     parser.add_argument('--db', '-d', type=str, default="weather.db", nargs="?",
                         help="Database file path")
     parser.add_argument('-v', action="store_true", help="verbose output")
-    parser.add_argument('command', choices=['report', 'run'], default="run", nargs="?",
-                        help="action")
+    parser.add_argument('command', choices=['report', 'run', 'report-temperature', 'report-humidity'], default="run",
+                        nargs="?", help="action")
     args = parser.parse_args()
 
     VERBOSE = args.v
@@ -136,6 +141,8 @@ if __name__ == "__main__":
     commands = {
         'run': run,
         'report': report,
+        'report-temperature': lambda: report("temp"),
+        'report-humidity': lambda: report("humidity"),
     }
 
     LOGGER.debug("Executing action: {command}".format(command=args.command))
