@@ -1,0 +1,30 @@
+---
+- hosts: pi
+  remote_user: pi
+  become: yes
+  tasks:
+    - name: install sqlite
+      apt:
+        name: sqlite
+        state: present
+    - name: create app folder
+      file:
+        path: /home/pi/weather
+        state: directory
+        mode: 0755
+    - name: copy app
+      copy:
+        src: "{{ item }}"
+        dest: /home/pi/weather/
+      with_items:
+        - Pipfile
+        - Pipfile.lock
+        - station.py
+    - name: setup exec flags
+      file:
+        path: /home/pi/weather/station.py
+        mode: 0755
+    - name: install deps
+      shell: pipenv install
+      args:
+        chdir: /home/pi/weather/
