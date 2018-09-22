@@ -15,10 +15,12 @@ case "$1" in
   start)
     echo "Starting shutdown.py"
     /usr/local/bin/shutdown.py &
+    echo "Started"
     ;;
   stop)
     echo "Stopping shutdown.py"
     pkill -f /usr/local/bin/shutdown.py
+    echo "Stopped"
     ;;
   *)
     echo "Usage: /etc/init.d/shutdown.sh {start|stop}"

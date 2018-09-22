@@ -1,0 +1,19 @@
+---
+- hosts: pi
+  remote_user: pi
+  become: yes
+  tasks:
+    - name: copy shutdown.py
+      copy:
+        src: shutdown.py
+        dest: /usr/local/bin/shutdown.py
+        mode: 0755
+    - name: copy shutdown.sh
+      copy:
+        src: shutdown.sh
+        dest: /etc/init.d/shutdown.sh
+        mode: 0755
+    - name: setup button listener
+      shell: update-rc.d shutdown.sh defaults
+    - name: start button listener service
+      shell: /etc/init.d/shutdown.sh start
