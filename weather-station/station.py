@@ -95,7 +95,7 @@ def get_last_humidity(location):
 # ACTIONS
 
 
-def report(type):
+def report(type=None):
     temperature, _, temp_time = get_last_temp(get_location())
     humidity, _, humidity_time = get_last_humidity(get_location())
     if type == "temp":
