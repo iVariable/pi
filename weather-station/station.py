@@ -2,14 +2,19 @@ import sqlite3
 import argparse
 import logging
 import time
+import Adafruit_DHT
 
+VERBOSE = False
+DB = None
+INPUT_PIN = 4
 VERSION = 0.1
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
 LOGGER = logging.getLogger('weather')
 
 
-def setup_db(conn):
-    cursor = conn.cursor()
+def setup_db():
+    cursor = DB.cursor()
     cursor.execute("CREATE TABLE IF NOT EXISTS location ("
                    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                    "name TEXT"
@@ -21,44 +26,75 @@ def setup_db(conn):
                    "created_at TEXT"
                    ");")
     cursor.execute("CREATE INDEX IF NOT EXISTS temp_location_created_at ON temp(location, created_at);")
-    conn.commit()
+    cursor.execute("CREATE TABLE IF NOT EXISTS humidity ("
+                   "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                   "location INTEGER,"
+                   "humidity REAL,"
+                   "created_at TEXT"
+                   ");")
+    cursor.execute("CREATE INDEX IF NOT EXISTS humidity_location_created_at ON temp(location, created_at);")
+    DB.commit()
 
 
 # HELPERS
 
 
-def get_location(conn):
+def get_location():
     return 1
 
 
-def store_temp(conn, temp):
-    cursor = conn.cursor()
+def store_temp(temp):
+    cursor = DB.cursor()
     cursor.execute("INSERT INTO temp (location, temp, created_at) VALUES(?, ?, datetime('now'))",
-                   (get_location(conn), temp))
-    conn.commit()
+                   (get_location(), temp))
+    DB.commit()
 
 
-def get_last_temp(conn, location):
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM temp WHERE location=? ORDER BY created_at LIMIT 1", (location, ))
+def get_last_temp(location):
+    cursor = DB.cursor()
+    cursor.execute("SELECT temp, location, created_at FROM temp WHERE location=? ORDER BY created_at DESC LIMIT 1",
+                   (location,))
+    return cursor.fetchone()
+
+
+def store_humidity(humidity):
+    cursor = DB.cursor()
+    cursor.execute("INSERT INTO humidity (location, humidity, created_at) VALUES(?, ?, datetime('now'))",
+                   (get_location(), humidity))
+    DB.commit()
+
+
+def get_last_humidity(location):
+    cursor = DB.cursor()
+    cursor.execute(
+        "SELECT humidity, location, created_at FROM humidity WHERE location=? ORDER BY created_at DESC LIMIT 1",
+        (location,))
     return cursor.fetchone()
 
 
 # ACTIONS
 
 
-def report(conn):
-    import pprint
-    pprint.pprint(get_last_temp(conn, get_location(conn)))
-    pass
+def report():
+    temperature, _, temp_time = get_last_temp(get_location())
+    humidity, _, humidity_time = get_last_humidity(get_location())
+    LOGGER.info('Temp at {temp_time}: {temp:0.1f} C  Humidity at {humidity_time}: {humidity:0.1f} %'.format(
+        temp=temperature, humidity=humidity, temp_time=temp_time, humidity_time=humidity_time
+    ))
 
 
-def run(conn):
-    store_temp(conn, 20)
-    # while True:
-    #     time.sleep(1)
-    pass
-
+def run():
+    delay = 60
+    next_time = time.time() + delay
+    while True:
+        time.sleep(max(0, next_time - time.time()))
+        humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, INPUT_PIN)
+        store_temp(temperature)
+        store_humidity(humidity)
+        if VERBOSE:
+            LOGGER.info('Temp: {0:0.1f} C  Humidity: {1:0.1f} %'.format(temperature, humidity))
+        next_time += (time.time() - next_time) // delay * delay + delay
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Weather station", description="My pretty lil weather station")
@@ -70,11 +106,13 @@ if __name__ == "__main__":
                         help="action")
     args = parser.parse_args()
 
-    if args.v:
+    VERBOSE = args.v
+
+    if VERBOSE:
         LOGGER.setLevel(logging.DEBUG)
 
-    conn = sqlite3.connect(args.db)
-    setup_db(conn)
+    DB = sqlite3.connect(args.db)
+    setup_db()
 
     commands = {
         'run': run,
@@ -83,8 +121,8 @@ if __name__ == "__main__":
 
     LOGGER.debug("Executing action: {command}".format(command=args.command))
     try:
-        commands.get(args.command)(conn)
+        commands.get(args.command)()
     except KeyboardInterrupt as e:
         LOGGER.info("Keyboard interruption detected")
 
-    conn.close()
+    DB.close()

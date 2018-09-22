@@ -7,15 +7,23 @@
       apt:
         name: sqlite
         state: present
+    - name: install global Adafruit_DHT
+      pip:
+        name: Adafruit_DHT
+        state: present
     - name: create app folder
       file:
         path: /home/pi/weather
         state: directory
         mode: 0755
+        owner: pi
+        group: pi
     - name: copy app
       copy:
         src: "{{ item }}"
         dest: /home/pi/weather/
+        owner: pi
+        group: pi
       with_items:
         - Pipfile
         - Pipfile.lock
