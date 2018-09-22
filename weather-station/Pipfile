@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 gpiozero = "*"
 Adafruit_DHT = "*"
+google-cloud-monitoring = "*"
 
 [dev-packages]
 

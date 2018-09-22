@@ -1,16 +1,24 @@
-import sqlite3
 import argparse
 import logging
+import sqlite3
 import time
+
 import Adafruit_DHT
+from google.cloud import monitoring_v3
+
+INPUT_PIN = 4
+
+VERSION = 0.1
+GCP_METRIC_TYPE = "weatherstation"
+MEASURE_INTERVAL = 60
 
 VERBOSE = False
 DB = None
-INPUT_PIN = 4
-VERSION = 0.1
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
 LOGGER = logging.getLogger('weather')
+
+GCP_CLIENT = monitoring_v3.MetricServiceClient.from_service_account_file('gcp_key.json')
 
 
 def setup_db():
@@ -38,6 +46,16 @@ def setup_db():
 
 # HELPERS
 
+def store_metric_in_gcp(type, location, value):
+    series = monitoring_v3.types.TimeSeries()
+    series.metric.type = 'custom.googleapis.com/' + GCP_METRIC_TYPE + '/' + type
+    series.resource.type = 'global'
+    point = series.points.add()
+    point.value.double_value = value
+    now = time.time()
+    point.interval.end_time.seconds = int(now)
+    GCP_CLIENT.create_time_series(GCP_CLIENT.project_path('zayavpn'), [series])
+
 
 def get_location():
     return 1
@@ -48,6 +66,7 @@ def store_temp(temp):
     cursor.execute("INSERT INTO temp (location, temp, created_at) VALUES(?, ?, datetime('now'))",
                    (get_location(), temp))
     DB.commit()
+    store_metric_in_gcp("temperature", get_location(), temp)
 
 
 def get_last_temp(location):
@@ -62,6 +81,7 @@ def store_humidity(humidity):
     cursor.execute("INSERT INTO humidity (location, humidity, created_at) VALUES(?, ?, datetime('now'))",
                    (get_location(), humidity))
     DB.commit()
+    store_metric_in_gcp("humidity", get_location(), humidity)
 
 
 def get_last_humidity(location):
@@ -84,8 +104,7 @@ def report():
 
 
 def run():
-    delay = 60
-    next_time = time.time() + delay
+    next_time = time.time() + MEASURE_INTERVAL
     while True:
         time.sleep(max(0, next_time - time.time()))
         humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, INPUT_PIN)
@@ -93,8 +112,8 @@ def run():
         store_humidity(humidity)
         if VERBOSE:
             LOGGER.info('Temp: {0:0.1f} C  Humidity: {1:0.1f} %'.format(temperature, humidity))
-        next_time += (time.time() - next_time) // delay * delay + delay
-    
+        next_time += (time.time() - next_time) // MEASURE_INTERVAL * MEASURE_INTERVAL + MEASURE_INTERVAL
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Weather station", description="My pretty lil weather station")

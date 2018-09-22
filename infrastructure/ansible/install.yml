@@ -49,6 +49,10 @@
 #      make:
 #        chdir: "/tmp/Python-{{version}}"
 #        target: altinstall
+    - name: install screen
+      apt:
+        name: screen
+        state: present
     - name: install pipenv
       pip:
         name: pipenv

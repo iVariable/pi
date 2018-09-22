@@ -2,15 +2,19 @@
 - hosts: pi
   remote_user: pi
   become: yes
+  gather_facts: no
   tasks:
     - name: install sqlite
       apt:
         name: sqlite
         state: present
-    - name: install global Adafruit_DHT
+    - name: install python libs
       pip:
-        name: Adafruit_DHT
+        name: "{{ item }}"
         state: present
+      with_items:
+        - google-cloud-monitoring
+        - Adafruit_DHT
     - name: create app folder
       file:
         path: /home/pi/weather
@@ -28,6 +32,9 @@
         - Pipfile
         - Pipfile.lock
         - station.py
+        - gcp_key.json
+      tags:
+        - files
     - name: setup exec flags
       file:
         path: /home/pi/weather/station.py
