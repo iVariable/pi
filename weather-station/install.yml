@@ -8,13 +8,6 @@
       apt:
         name: sqlite
         state: present
-    - name: install python libs
-      pip:
-        name: "{{ item }}"
-        state: present
-      with_items:
-        - google-cloud-monitoring
-        - Adafruit_DHT
     - name: create app folder
       file:
         path: /home/pi/weather
@@ -43,3 +36,13 @@
       shell: pipenv install
       args:
         chdir: /home/pi/weather/
+    - name: copy station.sh
+      copy:
+        src: station.sh
+        dest: /etc/init.d/station.sh
+        mode: 0755
+    - name: setup station
+      shell: update-rc.d station.sh defaults
+    - name: start station
+      shell: /etc/init.d/station.sh start
+

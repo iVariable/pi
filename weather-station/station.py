@@ -48,7 +48,7 @@ def setup_db():
 
 def store_metric_in_gcp(type, location, value):
     series = monitoring_v3.types.TimeSeries()
-    series.metric.type = 'custom.googleapis.com/' + GCP_METRIC_TYPE + '/' + type
+    series.metric.type = 'custom.googleapis.com/' + GCP_METRIC_TYPE + '/' + type + '/' + str(location)
     series.resource.type = 'global'
     point = series.points.add()
     point.value.double_value = value
@@ -104,7 +104,7 @@ def report():
 
 
 def run():
-    next_time = time.time() + MEASURE_INTERVAL
+    next_time = time.time()
     while True:
         time.sleep(max(0, next_time - time.time()))
         humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, INPUT_PIN)
