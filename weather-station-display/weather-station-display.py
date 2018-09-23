@@ -108,7 +108,8 @@ def _get_temp(stop_event):
     iteration = 30
     while not stop_event.isSet():
         if iteration == 30:  # this shit is needed to be more responsive to termination. Daemon did not work
-            temp = subprocess.check_output(['bash', '/etc/init.d/station.sh', 'report-temperature'], shell=False)
+            temp = subprocess.check_output(['bash', '/etc/init.d/station.sh', 'report-temperature'],
+                                           shell=False).strip()
             TEMP = temp[0:2] + "*C"
             LOGGER.info("Got temperature from station: " + TEMP)
             iteration = 0
@@ -142,7 +143,8 @@ def _get_humidity(stop_event):
     iteration = 30
     while not stop_event.isSet():
         if iteration == 30:  # this shit is needed to be more responsive to termination. Daemon did not work
-            HUMIDITY = subprocess.check_output(['bash', '/etc/init.d/station.sh', 'report-humidity'], shell=False)
+            HUMIDITY = subprocess.check_output(['bash', '/etc/init.d/station.sh', 'report-humidity'],
+                                               shell=False).strip()
             LOGGER.info("Got humidity from station: " + HUMIDITY)
             iteration = 0
         else:
