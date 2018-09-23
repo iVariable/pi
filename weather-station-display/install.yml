@@ -18,8 +18,8 @@
         owner: pi
         group: pi
       with_items:
-#        - Pipfile
-#        - Pipfile.lock
+        - Pipfile
+        - Pipfile.lock
         - weather-station-display.py
       tags:
         - files
@@ -27,17 +27,20 @@
       file:
         path: /home/pi/weather-station-display/weather-station-display.py
         mode: 0755
-#    - name: install deps
-#      shell: pipenv install
-#      args:
-#        chdir: /home/pi/weather/
-#    - name: copy station.sh
-#      copy:
-#        src: station.sh
-#        dest: /etc/init.d/station.sh
-#        mode: 0755
-#    - name: setup station
-#      shell: update-rc.d station.sh defaults
-#    - name: start station
-#      shell: /etc/init.d/station.sh start
+    - name: install deps
+      shell: pipenv install
+      args:
+        chdir: /home/pi/weather/
+      environment:
+        LC_ALL: "en_US.UTF-8"
+        LC_CTYPE: "en_US.UTF-8"
+    - name: copy station.sh
+      copy:
+        src: station.sh
+        dest: /etc/init.d/station.sh
+        mode: 0755
+    - name: setup station
+      shell: update-rc.d station.sh defaults
+    - name: start station
+      shell: /etc/init.d/station.sh start
 
