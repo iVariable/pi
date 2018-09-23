@@ -6,49 +6,19 @@
     version: 3.7.0
     threads: 4
   tasks:
-#    - name: "python{{version}} runtime&build dependencies"
-#      become: yes
-#      apt: name={{item}}
-#      with_items:
-#      - build-essential
-#      - tk-dev
-#      - libncurses5-dev
-#      - libncursesw5-dev
-#      - libreadline6-dev
-#      - libdb5.3-dev
-#      - libgdbm-dev
-#      - libsqlite3-dev
-#      - libssl-dev
-#      - libbz2-dev
-#      - libexpat1-dev
-#      - liblzma-dev
-#      - zlib1g-dev
-#    - name: "Download python{{version}}"
-#      get_url:
-#        url="https://www.python.org/ftp/python/{{version}}/Python-{{version}}.tar.xz"
-#        dest="/tmp/Python-{{version}}.tar.xz"
-#    - name: "Unarchive python{{version}}"
-#      unarchive:
-#        src="/tmp/Python-{{version}}.tar.xz"
-#        dest="/tmp/"
-#        copy=no
-#        creates="/tmp/Python-{{version}}"
-#    - name: "configure python{{version}} build"
-#      command: ./configure
-#      args:
-#        chdir: "/tmp/Python-{{version}}"
-#        creates: "/tmp/Python-{{version}}/Makefile"
-#    - name: "build python{{version}}"
-#      # not using make module to be able to use -j and creates option to fully skip step
-#      command: make -j{{threads}}
-#      args:
-#        chdir: "/tmp/Python-{{version}}"
-#        creates: "/tmp/Python-{{version}}/python"
-#    - name: "install python{{version}}"
-#      become: yes
-#      make:
-#        chdir: "/tmp/Python-{{version}}"
-#        target: altinstall
+    - name: check if python 3.7 is installed
+      shell: which python3.7
+      register: python3
+    - name: copy python installer
+      copy:
+        src: files/python3.7-installer.sh
+        dest: /tmp/python3.7-installer.sh
+      when: python3.stdout == ""
+    - name: run python installer
+      shell: ./python3.7-installer.sh
+      args:
+        chdir: /tmp
+      when: python3.stdout == ""
     - name: install screen
       apt:
         name: screen
@@ -57,5 +27,3 @@
       pip:
         name: pipenv
         state: present
-    - name: fix locales
-      shell: export LC_ALL="en_US.UTF-8" && export LC_CTYPE="en_US.UTF-8" && dpkg-reconfigure locales

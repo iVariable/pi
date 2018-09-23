@@ -26,8 +26,14 @@ case "$1" in
   report)
     pipenv run python station.py report
     ;;
+  report-temperature)
+    pipenv run python station.py report-temperature
+    ;;
+  report-humidity)
+    pipenv run python station.py report-humidity
+    ;;
   *)
-    echo "Usage: /etc/init.d/station.sh {start|stop|report}"
+    echo "Usage: /etc/init.d/station.sh {start|stop|report|report-humidity|report-temperature}"
     exit 1
     ;;
 esac

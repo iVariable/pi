@@ -36,6 +36,9 @@
       shell: pipenv install
       args:
         chdir: /home/pi/weather/
+      environment:
+        LC_ALL: "en_US.UTF-8"
+        LC_CTYPE: "en_US.UTF-8"
     - name: copy station.sh
       copy:
         src: station.sh

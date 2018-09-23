@@ -1,0 +1,43 @@
+---
+- hosts: pi
+  remote_user: pi
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: create app folder
+      file:
+        path: /home/pi/weather-station-display
+        state: directory
+        mode: 0755
+        owner: pi
+        group: pi
+    - name: copy app
+      copy:
+        src: "{{ item }}"
+        dest: /home/pi/weather-station-display/
+        owner: pi
+        group: pi
+      with_items:
+#        - Pipfile
+#        - Pipfile.lock
+        - weather-station-display.py
+      tags:
+        - files
+    - name: setup exec flags
+      file:
+        path: /home/pi/weather-station-display/weather-station-display.py
+        mode: 0755
+#    - name: install deps
+#      shell: pipenv install
+#      args:
+#        chdir: /home/pi/weather/
+#    - name: copy station.sh
+#      copy:
+#        src: station.sh
+#        dest: /etc/init.d/station.sh
+#        mode: 0755
+#    - name: setup station
+#      shell: update-rc.d station.sh defaults
+#    - name: start station
+#      shell: /etc/init.d/station.sh start
+
